@@ -222,8 +222,10 @@ exports.login = async (req, res) => {
         return res.status(500).json({
           success: false,
           message: "Internal Server Error during Login",
+            error:"error" + error
         });
         
     }
     
+
 }
