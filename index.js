@@ -12,7 +12,7 @@ const fileRouter = require("./routes/file");
 app.use(cors()); 
 app.use(express.json());
 
-// ================= ROUTES =================
+// ================= ROUTES ==================
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/file", fileRouter);
 
