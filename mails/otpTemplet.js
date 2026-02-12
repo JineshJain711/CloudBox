@@ -27,7 +27,7 @@ module.exports = ( name, otp, expiry = 5 ) => {
                                     </td>
                                 </tr>
                             </table>
-                            <h1 style="color: #ffffff; font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: bold; margin: 16px 0 4px 0; padding: 0;">SecureUpload</h1>
+                            <h1 style="color: #ffffff; font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: bold; margin: 16px 0 4px 0; padding: 0;">CloudBox</h1>
                             <p style="color: #94a3b8; font-size: 14px; margin: 0; padding: 0;">Secure File Management</p>
                         </td>
                     </tr>
@@ -99,10 +99,10 @@ module.exports = ( name, otp, expiry = 5 ) => {
                                 <tr>
                                     <td align="center">
                                         <p style="color: #64748b; font-size: 12px; line-height: 1.5; margin: 0;">
-                                            © ${new Date().getFullYear()} SecureUpload. All rights reserved.<br>
+                                            © ${new Date().getFullYear()} CloudBox. All rights reserved.<br>
                                             <span style="color: #94a3b8;">
                                                 Need help? Contact 
-                                                <a href="mailto:support@secureupload.com" style="color: #06b6d4; text-decoration: none;">support@secureupload.com</a>
+                                                <a href="mailto:support@cloudbox.com" style="color: #06b6d4; text-decoration: none;">support@cloudbox.com</a>
                                             </span>
                                         </p>
                                         <p style="color: #475569; font-size: 11px; margin: 12px 0 0 0; padding: 0;">
