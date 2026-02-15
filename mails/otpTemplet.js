@@ -100,8 +100,10 @@ module.exports = ( name, otp, expiry = 5 ) => {
                                     <td align="center">
                                         <p style="color: #64748b; font-size: 12px; line-height: 1.5; margin: 0;">
                                             © ${new Date().getFullYear()} CloudBox. All rights reserved.<br>
+                                            © ${new Date().getFullYear()} CloudBox. All rights reserved.<br>
                                             <span style="color: #94a3b8;">
                                                 Need help? Contact 
+                                                <a href="mailto:support@cloudbox.com" style="color: #06b6d4; text-decoration: none;">support@cloudbox.com</a>
                                                 <a href="mailto:support@cloudbox.com" style="color: #06b6d4; text-decoration: none;">support@cloudbox.com</a>
                                             </span>
                                         </p>

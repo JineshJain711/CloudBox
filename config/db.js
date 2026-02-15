@@ -1,7 +1,7 @@
 const mongoos = require("mongoose");
 
 require("dotenv").config();
-// console.log(process.env.MONGO_URL)
+// console.log(process.env.MONGO_URL);
 exports.dbConnect = async () => {
     mongoos.connect(process.env.MONGO_URL)
     .catch((error)=>{
@@ -11,4 +11,5 @@ exports.dbConnect = async () => {
     .then(
         console.log("DB connected Successufully")
     ) 
+
 }
