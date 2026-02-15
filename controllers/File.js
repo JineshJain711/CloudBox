@@ -101,6 +101,63 @@ exports.downloadFile = async (req, res) => {
   }
 };
 
+/* ================= RENAME ================= */
+exports.renameFile = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const { newName } = req.body;
+
+    if (!newName) {
+      return res.status(400).json({
+        success: false,
+        message: "New name is required",
+      });
+    }
+
+    const file = await File.findById(fileId);
+    if (!file) {
+      return res.status(404).json({
+        success: false,
+        message: "File not found",
+      });
+    }
+
+    const hasAccess = req.user.files.some((id) => id.toString() === fileId);
+    if (!hasAccess) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+
+    // Preserve extension if user didn't provide one
+    // Extract old extension
+    const oldExt = file.fileName.split('.').pop();
+    let finalName = newName.trim();
+    
+    // If new name doesn't have an extension, append the old one
+    // (Simple check: if no dot, or ends with dot)
+    if (!finalName.includes('.')) {
+        finalName = `${finalName}.${oldExt}`;
+    }
+
+    file.fileName = finalName;
+    await file.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "File renamed successfully",
+      file,
+    });
+  } catch (error) {
+    console.error("RENAME ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Rename failed",
+    });
+  }
+};
+
 /* ================= DELETE ================= */
 exports.deleteFile = async (req, res) => {
   try {
