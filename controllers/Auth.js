@@ -7,104 +7,91 @@ const { sendMail } = require("../utils/emailSender");
 const otpTamplet = require("../mails/otpTemplet");
 const jwt = require("jsonwebtoken");
 
-// Use a safe default in development so login doesn't crash when JWT_SECRET is missing
-const JWT_SECRET = process.env.JWT_SECRET || "DEV_JWT_SECRET_CHANGE_ME";
+const JWT_SECRET = process.env.JWT_SECRET ;
 
-exports.registerUser = async(req,res)=>{
-    try {
-        const{name,password,email,} = req.body;
+exports.registerUser = async (req, res) => {
+  try {
+    const { name, password, email } = req.body;
 
-        if(!name||!password||!email)
-        {
-            return res.status(404).json({
-                success:"false",
-                message:"All field is REquired"
-            })
-        }
-        if(name.length<=3)
-        {
-            return res.status(422).json({
-                success:"false",
-                message:"Name should be prper and greater thne 2 charecter"
-            });
-        }
-        if(!validater.isEmail(email))
-        {
-            return res.status(422).json({
-                success:"false",
-                message:"fill correct email"
-            })
-        }
-        const userExist = await User.findOne({email:email})
-        if(userExist && userExist.userVerified == false)
-        {
-            await User.deleteOne({email:userExist.email});
-            const otp = crypto.randomInt(100000,999999);
-            await OTP.deleteMany({email});
-
-            const newOTP = await OTP.create({email,otp,expiresAt:Date.now() + 5 * 60 * 1000});
-            const otpMail = otpTamplet(userExist.name,otp) ;
-<<<<<<< HEAD
-            const response = await sendMail(userExist.email,"OTP Verification","text",otpMail);
-=======
-            const response = sendMail(userExist.email,"OTP Verification","text",otpMail);
->>>>>>> 8984496cca173c7b30c44b04d430f7d0e6aa774b
-
-             const hashedPassword = await bcrypt.hash(password,10);
-             const user = await User.create({name:name,
-                        password:hashedPassword,
-                        email:email,
-                        userVerified:false});
-
-            return res.status(403).json({
-                message:"User is Registerd but not verifid so OTP is send"
-            })
-        }else if(userExist && userExist.userVerified == true)
-        {
-            return res.status(401).json({
-                success:false,
-                message:"User is Registerd already"
-            })
-        }
-       const hashedPassword = await bcrypt.hash(password,10);
-        const user = await User.create({name:name,
-                        password:hashedPassword,
-                        email:email,
-                        userVerified:false});
-        
-        const otp = crypto.randomInt(100000,999999);
-        await OTP.deleteMany({email});
-
-        const newOTP = await OTP.create({email,otp,expiresAt:Date.now() + 5 * 60 * 1000});
-        console.log(newOTP);
-        const otpMail = otpTamplet(user.name,otp) ;
-<<<<<<< HEAD
-        const response = await sendMail(user.email,"OTP Verification","text",otpMail);
-=======
-        const response = sendMail(user.email,"OTP Verification","text",otpMail);
->>>>>>> 8984496cca173c7b30c44b04d430f7d0e6aa774b
-        if(!response)
-        {
-            return res.status(500).json({
-                success:false,
-                message:"Verification not be done Due to some issue"
-            })
-        }
-        return res.status(200).json({
-            success:true,
-            message:"OTP is sended Sussefull on email :-"+user.email
-        })
- 
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            success:false,
-            message:"Internal Server Error while SignUp",
-            error:error,
-        })
-        
+    if (!name || !password || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
     }
-}
+
+    if (name.trim().length <= 2) {
+      return res.status(422).json({
+        success: false,
+        message: "Name must be greater than 2 characters",
+      });
+    }
+
+    if (!validater.isEmail(email)) {
+      return res.status(422).json({
+        success: false,
+        message: "Please enter a valid email address",
+      });
+    }
+
+    const userExist = await User.findOne({ email });
+
+    // Handle existing user
+    if (userExist) {
+      if (userExist.userVerified === true) {
+        return res.status(401).json({
+          success: false,
+          message: "User is Registerd already",
+        });
+      }
+
+      // If user exists but is not verified -> delete old record & re-register
+      await User.deleteOne({ email: userExist.email });
+      await OTP.deleteMany({ email });
+    }
+
+    // Create new unverified user
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name: name.trim(),
+      password: hashedPassword,
+      email: email.trim().toLowerCase(),
+      userVerified: false,
+    });
+
+    // Generate & send OTP
+    const otp = crypto.randomInt(100000, 999999);
+    await OTP.deleteMany({ email: user.email });
+    await OTP.create({
+      email: user.email,
+      otp,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    });
+
+    const otpMail = otpTamplet(user.name, otp);
+    const response = await sendMail(user.email, "OTP Verification", "text", otpMail);
+
+    if (!response) {
+      return res.status(500).json({
+        success: false,
+        message: "Verification OTP could not be sent due to email service issue",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP is sended Sussefull on email :-" + user.email,
+    });
+
+  } catch (error) {
+    console.error("Register Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error while SignUp",
+      error: error.message,
+    });
+  }
+};
 
 exports.verifyOtp = async (req, res) => {
   try {
@@ -117,7 +104,8 @@ exports.verifyOtp = async (req, res) => {
       });
     }
 
-    const otpRecord = await OTP.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const otpRecord = await OTP.findOne({ email: normalizedEmail });
 
     if (!otpRecord) {
       return res.status(404).json({
@@ -127,36 +115,32 @@ exports.verifyOtp = async (req, res) => {
     }
 
     if (otpRecord.expiresAt < Date.now()) {
-      await OTP.deleteMany({ email });
+      await OTP.deleteMany({ email: normalizedEmail });
       return res.status(410).json({
         success: false,
         message: "OTP expired",
       });
     }
 
-    const isMatch = await bcrypt.compare(otp, otpRecord.otp);
+    const isMatch = await bcrypt.compare(String(otp), String(otpRecord.otp));
 
     if (!isMatch) {
       otpRecord.attempts += 1;
       await otpRecord.save();
 
-<<<<<<< HEAD
-      return res.status(400).json({
-=======
       return res.status(401).json({
->>>>>>> 8984496cca173c7b30c44b04d430f7d0e6aa774b
         success: false,
         message: "Invalid OTP",
-        warning:`${3-otpRecord.attempts} Attempts are Left`
+        warning: `${3 - otpRecord.attempts} Attempts are Left`,
       });
     }
 
     await User.findOneAndUpdate(
-      { email },
+      { email: normalizedEmail },
       { userVerified: true }
     );
 
-    await OTP.deleteMany({ email });
+    await OTP.deleteMany({ email: normalizedEmail });
 
     return res.status(200).json({
       success: true,
@@ -164,7 +148,7 @@ exports.verifyOtp = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Verify OTP Error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error during OTP verification",
@@ -173,71 +157,72 @@ exports.verifyOtp = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        if(!email||!password)
-        {
-            return res.status(400).json({
-                success:false,
-                message:'All field Are required'
-            })
-        }
-        if(!validater.isEmail(email))
-        {
-            return res.status(400).json({
-                success:false,
-                message:'Fill Proper Email ID'
-            })
-        }
-        const isUser = await User.findOne({ email: email });
-        if(!isUser)
-        {
-            return res.status(404).json({
-                success:false,
-                message:"User not Found"
-            })
-        }
-        if(!isUser.userVerified)
-        {
-            return res.status(401).json({
-                success:false,
-                message:"User is Exist but Not Verifyed Go to Resister page "
-            })
-        }
-        const isPass = await bcrypt.compare(password, isUser.password);
-        if(!isPass)
-        {
-            return res.status(400).json({
-                success:false,
-                message:"Wrong Password"
-            })
-        }
-        const token = jwt.sign(
-          { id: isUser._id, email: isUser.email, name: isUser.name },
-          JWT_SECRET,
-          {
-            expiresIn: "7d",
-          }
-        );
+  try {
+    const { email, password } = req.body;
 
-        // never send password back
-        isUser.password = undefined;
-        return res.status(200).json({
-            success:true,
-            message:"User is Loged In",
-            token:token,
-            user:isUser,
-        })
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-          success: false,
-          message: "Internal Server Error during Login",
-            error:"error" + error
-        });
-        
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
     }
-    
 
-}
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!validater.isEmail(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Fill Proper Email ID",
+      });
+    }
+
+    const isUser = await User.findOne({ email: normalizedEmail });
+
+    if (!isUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not Found",
+      });
+    }
+
+    if (!isUser.userVerified) {
+      return res.status(401).json({
+        success: false,
+        message: "User is Exist but Not Verifyed Go to Resister page ",
+      });
+    }
+
+    const isPass = await bcrypt.compare(password, isUser.password);
+
+    if (!isPass) {
+      return res.status(400).json({
+        success: false,
+        message: "Wrong Password",
+      });
+    }
+
+    const token = jwt.sign(
+      { id: isUser._id, email: isUser.email, name: isUser.name },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Hide password from response
+    isUser.password = undefined;
+
+    return res.status(200).json({
+      success: true,
+      message: "User is Loged In",
+      token: token,
+      user: isUser,
+    });
+
+  } catch (error) {
+    console.error("Login Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error during Login",
+      error: error.message,
+    });
+  }
+};
