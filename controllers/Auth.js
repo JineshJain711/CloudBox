@@ -44,7 +44,7 @@ exports.registerUser = async(req,res)=>{
 
             const newOTP = await OTP.create({email,otp,expiresAt:Date.now() + 5 * 60 * 1000});
             const otpMail = otpTamplet(userExist.name,otp) ;
-            const response = sendMail(userExist.email,"OTP Verification","text",otpMail);
+            const response = await sendMail(userExist.email,"OTP Verification","text",otpMail);
 
              const hashedPassword = await bcrypt.hash(password,10);
              const user = await User.create({name:name,
@@ -74,7 +74,7 @@ exports.registerUser = async(req,res)=>{
         const newOTP = await OTP.create({email,otp,expiresAt:Date.now() + 5 * 60 * 1000});
         console.log(newOTP);
         const otpMail = otpTamplet(user.name,otp) ;
-        const response = sendMail(user.email,"OTP Verification","text",otpMail);
+        const response = await sendMail(user.email,"OTP Verification","text",otpMail);
         if(!response)
         {
             return res.status(500).json({
@@ -132,7 +132,7 @@ exports.verifyOtp = async (req, res) => {
       otpRecord.attempts += 1;
       await otpRecord.save();
 
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Invalid OTP",
         warning:`${3-otpRecord.attempts} Attempts are Left`
