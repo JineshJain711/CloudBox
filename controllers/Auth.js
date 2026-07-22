@@ -44,7 +44,11 @@ exports.registerUser = async(req,res)=>{
 
             const newOTP = await OTP.create({email,otp,expiresAt:Date.now() + 5 * 60 * 1000});
             const otpMail = otpTamplet(userExist.name,otp) ;
+<<<<<<< HEAD
             const response = await sendMail(userExist.email,"OTP Verification","text",otpMail);
+=======
+            const response = sendMail(userExist.email,"OTP Verification","text",otpMail);
+>>>>>>> 8984496cca173c7b30c44b04d430f7d0e6aa774b
 
              const hashedPassword = await bcrypt.hash(password,10);
              const user = await User.create({name:name,
@@ -74,7 +78,11 @@ exports.registerUser = async(req,res)=>{
         const newOTP = await OTP.create({email,otp,expiresAt:Date.now() + 5 * 60 * 1000});
         console.log(newOTP);
         const otpMail = otpTamplet(user.name,otp) ;
+<<<<<<< HEAD
         const response = await sendMail(user.email,"OTP Verification","text",otpMail);
+=======
+        const response = sendMail(user.email,"OTP Verification","text",otpMail);
+>>>>>>> 8984496cca173c7b30c44b04d430f7d0e6aa774b
         if(!response)
         {
             return res.status(500).json({
@@ -132,7 +140,11 @@ exports.verifyOtp = async (req, res) => {
       otpRecord.attempts += 1;
       await otpRecord.save();
 
+<<<<<<< HEAD
       return res.status(400).json({
+=======
+      return res.status(401).json({
+>>>>>>> 8984496cca173c7b30c44b04d430f7d0e6aa774b
         success: false,
         message: "Invalid OTP",
         warning:`${3-otpRecord.attempts} Attempts are Left`
